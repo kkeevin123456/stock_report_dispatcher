@@ -1,0 +1,21 @@
+name: Stock Report Relay
+
+on:
+  repository_dispatch:
+    types: [stock-report]
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Forward to NAS webhook
+        env:
+          PAYLOAD: ${{ toJson(github.event.client_payload) }}
+        run: |
+          response=$(curl -s -o /tmp/resp.txt -w "%{http_code}" \
+            -X POST https://kkeevin123456.myDS.me/webhook/stock-report \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "$PAYLOAD")
+          echo "HTTP status: $response"
+          echo "Response body: $(cat /tmp/resp.txt)"
+          [ "$response" = "200" ] || exit 1
